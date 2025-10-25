@@ -1,6 +1,7 @@
 import type { MCPAdapter } from './base.js';
 import { ClaudeAdapter } from './claude.js';
 import { ClineAdapter } from './cline.js';
+import { CursorAdapter } from './cursor.js';
 
 /**
  * Registry of all available MCP adapters
@@ -8,6 +9,7 @@ import { ClineAdapter } from './cline.js';
 export class AdapterRegistry {
   private static adapters: MCPAdapter[] = [
     new ClaudeAdapter(),
+    new CursorAdapter(),
     new ClineAdapter(),
     // Add more adapters here as they're implemented
   ];
@@ -35,7 +37,7 @@ export class AdapterRegistry {
 
   /**
    * Auto-select the best adapter
-   * Priority: Claude > Cline > Continue > Others
+   * Priority: Claude > Cursor > Cline > Continue > Others
    */
   static autoSelect(): MCPAdapter | null {
     const detected = this.detectAll();
@@ -45,7 +47,7 @@ export class AdapterRegistry {
     }
 
     // Priority order
-    const priority = ['claude', 'cline', 'continue', 'zed'];
+    const priority = ['claude', 'cursor', 'cline', 'continue', 'zed'];
 
     for (const id of priority) {
       const adapter = detected.find(a => a.id === id);

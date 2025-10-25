@@ -17,6 +17,7 @@ Multiple highly-upvoted GitHub issues ([#6638](https://github.com/anthropics/cla
 ## Supported Tools
 
 - **Claude Code** - Anthropic's official CLI
+- **Cursor** - AI-first code editor
 - **Cline** - Popular VS Code extension
 - **Continue** - Coming soon
 - **Zed** - Coming soon
@@ -25,7 +26,7 @@ The tool auto-detects which MCP-enabled tools you have installed and manages the
 
 ## Features
 
-- **Universal** - Works with Claude Code, Cline, and more
+- **Universal** - Works with Claude Code, Cursor, Cline, and more
 - **Auto-Detection** - Automatically finds installed MCP tools
 - **Quick Enable/Disable** - Toggle servers on/off instantly
 - **Token Tracking** - See exactly how many tokens each server consumes
@@ -174,6 +175,9 @@ mcp-manager status
 # Explicitly manage Claude Code
 mcp-manager --tool=claude status
 
+# Manage Cursor IDE
+mcp-manager --tool=cursor list
+
 # Manage Cline (VS Code extension)
 mcp-manager --tool=cline list
 
@@ -228,6 +232,7 @@ Context Available: 186,000 tokens (93% of budget)
 `mcp-manager` uses an adapter pattern to support multiple MCP-enabled tools:
 
 - **Claude Code**: Manages `~/.claude.json`
+- **Cursor**: Manages `~/.cursor/mcp.json` (with separate `mcp-disabled.json` for disabled servers)
 - **Cline**: Manages VS Code `settings.json`
 - **Continue**: Manages `~/.continue/config.json` (coming soon)
 - **Zed**: Manages Zed settings (coming soon)
@@ -284,6 +289,7 @@ Please open an issue or PR on [GitHub](https://github.com/houseworthe/claude-mcp
 ## Roadmap
 
 - [x] Claude Code support
+- [x] Cursor support
 - [x] Cline support
 - [x] Auto-detection of installed tools
 - [x] Token estimation

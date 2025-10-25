@@ -1,0 +1,39 @@
+{
+  "name": "claude-mcp-manager",
+  "version": "1.0.0",
+  "description": "CLI tool to manage Claude Code MCP servers - disable, enable, and optimize token usage",
+  "main": "dist/cli.js",
+  "type": "module",
+  "bin": {
+    "mcp-manager": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "keywords": [
+    "claude",
+    "mcp",
+    "claude-code",
+    "cli",
+    "token-optimization"
+  ],
+  "author": "Ethan Houseworth",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "inquirer": "^9.2.12",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/inquirer": "^9.0.7",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

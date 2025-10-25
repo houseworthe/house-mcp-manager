@@ -231,9 +231,9 @@ Context Available: 186,000 tokens (93% of budget)
 
 `mcp-manager` uses an adapter pattern to support multiple MCP-enabled tools:
 
-- **Claude Code**: Manages `~/.claude.json`
-- **Cursor**: Manages `~/.cursor/mcp.json` (with separate `mcp-disabled.json` for disabled servers)
-- **Cline**: Manages VS Code `settings.json`
+- **Claude Code**: Manages `~/.claude.json` with an internal `_disabled_mcpServers` field
+- **Cursor**: Manages `~/.cursor/mcp.json` for active servers. Disabled servers are stored in a separate `~/.cursor/mcp-disabled.json` file to avoid polluting the native Cursor configuration. Backups are saved to `~/.claude-mcp-backups/cursor/`
+- **Cline**: Manages VS Code `settings.json` using the `cline.mcpServers` and `cline._disabled_mcpServers` namespaced keys
 - **Continue**: Manages `~/.continue/config.json` (coming soon)
 - **Zed**: Manages Zed settings (coming soon)
 
@@ -286,45 +286,6 @@ This tool was built to solve a real problem in the MCP ecosystem. If you have:
 
 Please open an issue or PR on [GitHub](https://github.com/houseworthe/claude-mcp-manager)!
 
-## Roadmap
-
-- [x] Claude Code support
-- [x] Cursor support
-- [x] Cline support
-- [x] Auto-detection of installed tools
-- [x] Token estimation
-- [x] Profile system
-- [x] Interactive mode
-- [ ] Continue.dev support
-- [ ] Zed support
-- [ ] Real-time token introspection
-- [ ] Global disable/enable all
-- [ ] Server categories (dev, prod, testing)
-- [ ] Export/import profiles as shareable files
-- [ ] VS Code extension
-- [ ] Sync configs across tools
-
-## Background
-
-This tool was created to address the MCP server management pain point discussed in Claude Code GitHub issues. Built as a universal solution for the entire MCP ecosystem, not just one tool.
-
-Built by [@ethanhouseworth](https://github.com/ethanhouseworth) as part of the AI-native development philosophy.
-
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details.
-
----
-
-**Built with:**
-- TypeScript
-- Commander.js
-- Inquirer.js
-- Chalk
-
-**Questions?**
-Open an issue on [GitHub](https://github.com/houseworthe/claude-mcp-manager) or reach out to [@ethanhouseworth](https://github.com/ethanhouseworth).
-
----
-
-**If this tool saves your tokens, give it a star on GitHub!**

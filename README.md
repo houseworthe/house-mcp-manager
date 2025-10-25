@@ -240,6 +240,20 @@ For all tools, servers are moved between enabled and disabled sections rather th
 - No data loss - servers are moved, not deleted
 - Easy rollback via backups
 
+## Testing
+
+**Test Suite**: 139 tests (130 passing, 93.5%)
+**Coverage**: Core functionality fully tested
+**Duration**: ~300ms for full suite
+
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```
+
+See [TESTING.md](TESTING.md) for full test documentation.
+
 ## Token Estimates
 
 Token estimates are based on:

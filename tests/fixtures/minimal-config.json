@@ -1,0 +1,14 @@
+{
+  "enabled": {
+    "time": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-time"],
+      "env": {}
+    }
+  },
+  "disabled": {},
+  "metadata": {
+    "tool": "test",
+    "version": "1.0.0"
+  }
+}

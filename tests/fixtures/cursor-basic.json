@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "canvas-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "canvas-mcp-server"],
+      "env": {}
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "test-token"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "env": {}
+    }
+  }
+}

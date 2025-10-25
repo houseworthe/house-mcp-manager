@@ -1,0 +1,10 @@
+{
+  "enabled": {
+    "server1": {
+      "command": "test",
+      // Invalid comment in JSON
+      "args": [,,,]  // Invalid array syntax
+    }
+  }
+  "disabled": {}  // Missing comma
+}

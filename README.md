@@ -21,6 +21,24 @@ Multiple highly-upvoted GitHub issues ([#6638](https://github.com/anthropics/cla
 - **Safe** - Automatic backups before any modifications
 - **Fast** - No need to restart Claude or manually edit configs
 
+## Quick Setup with Claude Code
+
+Copy and paste this prompt into Claude Code to automatically install mcp-manager:
+
+```
+Please help me install claude-mcp-manager:
+
+1. Clone the repository from https://github.com/houseworthe/mcp-manager
+2. Navigate into the cloned directory
+3. Run npm install to install dependencies
+4. Run npm run build to compile the TypeScript
+5. Run npm link to make the mcp-manager command available globally
+6. Verify the installation by running: mcp-manager --help
+7. Show me my current MCP server status by running: mcp-manager status
+
+After installation, explain what mcp-manager does and show me the key commands I can use.
+```
+
 ## Installation
 
 ### Option 1: Clone & Link (Recommended for Now)

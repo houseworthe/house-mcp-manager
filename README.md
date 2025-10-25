@@ -1,34 +1,47 @@
-# Claude MCP Manager
+# MCP Manager
 
-A powerful CLI tool to manage your Claude Code MCP servers and optimize your token usage.
+**Universal MCP server management for AI coding agents**
+
+A powerful CLI tool to manage MCP servers across multiple AI coding tools (Claude Code, Cline, Continue) and optimize your token usage.
 
 ## The Problem
 
-Claude Code loads ALL configured MCP servers on startup, consuming massive amounts of your context window before you even start coding. Some servers like Canvas can consume **78,000+ tokens** - that's nearly 40% of your 200K context budget!
+AI coding agents load ALL configured MCP servers on startup, consuming massive amounts of your context window before you even start coding. Some servers like Canvas can consume **78,000+ tokens** - that's nearly 40% of your 200K context budget!
 
 Multiple highly-upvoted GitHub issues ([#6638](https://github.com/anthropics/claude-code/issues/6638), [#5722](https://github.com/anthropics/claude-code/issues/5722), [#7068](https://github.com/anthropics/claude-code/issues/7068), [#7936](https://github.com/anthropics/claude-code/issues/7936)) show the community wants better MCP management, but there's no official solution yet.
 
 ## The Solution
 
-`mcp-manager` lets you quickly enable/disable MCP servers, view token usage, save profiles, and optimize your context window - all without manually editing JSON files.
+`mcp-manager` works with ANY MCP-enabled tool to let you quickly enable/disable servers, view token usage, save profiles, and optimize your context window - all without manually editing JSON files.
+
+## Supported Tools
+
+- **Claude Code** - Anthropic's official CLI
+- **Cline** - Popular VS Code extension
+- **Continue** - Coming soon
+- **Zed** - Coming soon
+
+The tool auto-detects which MCP-enabled tools you have installed and manages them accordingly.
 
 ## Features
 
+- **Universal** - Works with Claude Code, Cline, and more
+- **Auto-Detection** - Automatically finds installed MCP tools
 - **Quick Enable/Disable** - Toggle servers on/off instantly
 - **Token Tracking** - See exactly how many tokens each server consumes
 - **Interactive Mode** - Beautiful checkbox interface for bulk management
 - **Profiles** - Save and load different server configurations
 - **Safe** - Automatic backups before any modifications
-- **Fast** - No need to restart Claude or manually edit configs
+- **Fast** - No need to restart or manually edit configs
 
 ## Quick Setup with Claude Code
 
 Copy and paste this prompt into Claude Code to automatically install mcp-manager:
 
 ```
-Please help me install claude-mcp-manager:
+Please help me install mcp-manager:
 
-1. Clone the repository from https://github.com/houseworthe/mcp-manager
+1. Clone the repository from https://github.com/houseworthe/claude-mcp-manager
 2. Navigate into the cloned directory
 3. Run npm install to install dependencies
 4. Run npm run build to compile the TypeScript
@@ -41,10 +54,10 @@ After installation, explain what mcp-manager does and show me the key commands I
 
 ## Installation
 
-### Option 1: Clone & Link (Recommended for Now)
+### Option 1: Clone & Link (Recommended)
 
 ```bash
-git clone https://github.com/ethanhouseworth/claude-mcp-manager.git
+git clone https://github.com/houseworthe/claude-mcp-manager.git
 cd claude-mcp-manager
 npm install
 npm run build
@@ -56,7 +69,7 @@ Now you can use `mcp-manager` from anywhere!
 ### Option 2: Run from Source
 
 ```bash
-git clone https://github.com/ethanhouseworth/claude-mcp-manager.git
+git clone https://github.com/houseworthe/claude-mcp-manager.git
 cd claude-mcp-manager
 npm install
 npm run dev <command>
@@ -65,19 +78,30 @@ npm run dev <command>
 ### Future: npm Global Install (Coming Soon)
 
 ```bash
-npm install -g claude-mcp-manager
+npm install -g mcp-manager
 ```
 
 ## Quick Start
 
+### Detect Installed Tools
+
+```bash
+# See which MCP-enabled tools are installed
+mcp-manager detect
+```
+
 ### View Your Current Setup
 
 ```bash
-# List all servers
+# List all servers (auto-detects tool)
 mcp-manager list
 
 # View detailed token estimates
 mcp-manager status
+
+# Manage a specific tool
+mcp-manager --tool=cline list
+mcp-manager --tool=claude status
 ```
 
 ### Enable/Disable Servers
@@ -126,6 +150,7 @@ mcp-manager profile delete old-config
 
 | Command | Description |
 |---------|-------------|
+| `mcp-manager detect` | Detect installed MCP-enabled tools |
 | `mcp-manager list` | List all MCP servers (enabled/disabled) |
 | `mcp-manager status` | Show detailed status with token estimates |
 | `mcp-manager disable <server>` | Disable a specific server |
@@ -136,8 +161,25 @@ mcp-manager profile delete old-config
 | `mcp-manager profile list` | List all saved profiles |
 | `mcp-manager profile delete <name>` | Delete a profile |
 | `mcp-manager profile init` | Create pre-built profiles |
-| `mcp-manager config` | Show Claude config file path |
+| `mcp-manager config` | Show MCP config file path |
+| `mcp-manager --tool=<id> <command>` | Manage a specific tool |
 | `mcp-manager --help` | Show help |
+
+## Multi-Tool Management
+
+```bash
+# Auto-detect which tool to manage
+mcp-manager status
+
+# Explicitly manage Claude Code
+mcp-manager --tool=claude status
+
+# Manage Cline (VS Code extension)
+mcp-manager --tool=cline list
+
+# See which tools are detected
+mcp-manager detect
+```
 
 ## Example Workflow
 
@@ -183,10 +225,17 @@ Context Available: 186,000 tokens (93% of budget)
 
 ## How It Works
 
-`mcp-manager` reads your `~/.claude.json` config file and moves servers between `mcpServers` (enabled) and `_disabled_mcpServers` (disabled). This is the same approach recommended in the Claude Code issues but automated for you.
+`mcp-manager` uses an adapter pattern to support multiple MCP-enabled tools:
+
+- **Claude Code**: Manages `~/.claude.json`
+- **Cline**: Manages VS Code `settings.json`
+- **Continue**: Manages `~/.continue/config.json` (coming soon)
+- **Zed**: Manages Zed settings (coming soon)
+
+For all tools, servers are moved between enabled and disabled sections rather than deleted, ensuring no data loss.
 
 **Safety Features:**
-- Automatic backups before modifications (stored in `~/.claude-mcp-backups/`)
+- Automatic backups before modifications
 - JSON validation after every change
 - No data loss - servers are moved, not deleted
 - Easy rollback via backups
@@ -208,31 +257,36 @@ Estimates may not be 100% accurate, but they give you a solid understanding of r
 
 ## Contributing
 
-This tool was built to solve a real problem in the Claude Code ecosystem. If you have:
+This tool was built to solve a real problem in the MCP ecosystem. If you have:
 
 - Bug reports
 - Feature requests
 - Accurate token counts for servers
+- New tool adapters (Continue, Zed, etc.)
 - UI improvements
 
-Please open an issue or PR on [GitHub](https://github.com/ethanhouseworth/claude-mcp-manager)!
+Please open an issue or PR on [GitHub](https://github.com/houseworthe/claude-mcp-manager)!
 
 ## Roadmap
 
-- [ ] Real-time token introspection (query MCP servers for actual tool counts)
+- [x] Claude Code support
+- [x] Cline support
+- [x] Auto-detection of installed tools
+- [x] Token estimation
+- [x] Profile system
+- [x] Interactive mode
+- [ ] Continue.dev support
+- [ ] Zed support
+- [ ] Real-time token introspection
 - [ ] Global disable/enable all
 - [ ] Server categories (dev, prod, testing)
 - [ ] Export/import profiles as shareable files
-- [ ] VS Code extension for even easier management
-- [ ] Integration with Claude Code settings UI
+- [ ] VS Code extension
+- [ ] Sync configs across tools
 
 ## Background
 
-This tool was created to address the MCP server management pain point discussed in:
-- [Issue #6638](https://github.com/anthropics/claude-code/issues/6638) - Dynamic loading/unloading of MCP servers (22+ upvotes)
-- [Issue #5722](https://github.com/anthropics/claude-code/issues/5722) - Enable/Disable toggle for MCP configurations
-- [Issue #7068](https://github.com/anthropics/claude-code/issues/7068) - Enable/Disable in /mcp command
-- [Issue #7936](https://github.com/anthropics/claude-code/issues/7936) - MCP servers persist despite removal
+This tool was created to address the MCP server management pain point discussed in Claude Code GitHub issues. Built as a universal solution for the entire MCP ecosystem, not just one tool.
 
 Built by [@ethanhouseworth](https://github.com/ethanhouseworth) as part of the AI-native development philosophy.
 
@@ -249,7 +303,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - Chalk
 
 **Questions?**
-Open an issue on [GitHub](https://github.com/ethanhouseworth/claude-mcp-manager) or reach out to [@ethanhouseworth](https://github.com/ethanhouseworth).
+Open an issue on [GitHub](https://github.com/houseworthe/claude-mcp-manager) or reach out to [@ethanhouseworth](https://github.com/ethanhouseworth).
 
 ---
 

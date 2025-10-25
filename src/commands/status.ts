@@ -1,19 +1,19 @@
 import chalk from 'chalk';
-import { loadConfig, getEnabledServers, getDisabledServers } from '../config.js';
+import type { MCPAdapter } from '../adapters/base.js';
 import { createServerTable, header, formatTokenCount, error as formatError } from '../utils/formatting.js';
 import { estimateServerTokens, estimateServerTools, calculateTotalTokens } from '../utils/tokens.js';
 
-export function statusCommand(): void {
+export function statusCommand(adapter: MCPAdapter): void {
   try {
-    const config = loadConfig();
+    const config = adapter.loadConfig();
 
-    const enabledServers = getEnabledServers(config);
-    const disabledServers = getDisabledServers(config);
+    const enabledServers = adapter.getEnabledServers(config);
+    const disabledServers = adapter.getDisabledServers(config);
 
-    console.log(header('MCP Server Status & Token Estimates'));
+    console.log(header(`MCP Server Status & Token Estimates (${adapter.name})`));
 
     // Calculate total enabled tokens
-    const totalEnabledTokens = calculateTotalTokens(config.mcpServers || {});
+    const totalEnabledTokens = calculateTotalTokens(config.enabled || {});
 
     // Show enabled servers with details
     if (enabledServers.length > 0) {
@@ -22,7 +22,7 @@ export function statusCommand(): void {
       const enabledTable = createServerTable();
 
       enabledServers.forEach(name => {
-        const server = config.mcpServers[name];
+        const server = config.enabled[name];
         const tokens = estimateServerTokens(name, server);
         const tools = estimateServerTools(name, server);
 
@@ -47,7 +47,7 @@ export function statusCommand(): void {
       const disabledTable = createServerTable();
 
       disabledServers.forEach(name => {
-        const server = config._disabled_mcpServers![name];
+        const server = config.disabled[name];
         const tokens = estimateServerTokens(name, server);
         const tools = estimateServerTools(name, server);
 

@@ -2,14 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import chalk from 'chalk';
-import { loadConfig, saveConfig, type ClaudeConfig } from '../config.js';
+import type { MCPAdapter, MCPConfig } from '../adapters/base.js';
 import { success, error as formatError, createProfileTable, header } from '../utils/formatting.js';
 
 const PROFILES_DIR = path.join(os.homedir(), '.claude-mcp-profiles');
 
 interface Profile {
   name: string;
-  mcpServers: Record<string, any>;
+  tool?: string;  // Optional for backward compat
+  enabled?: Record<string, any>;
+  disabled?: Record<string, any>;
+  // Old format (backward compat)
+  mcpServers?: Record<string, any>;
   _disabled_mcpServers?: Record<string, any>;
   created: string;
 }
@@ -46,16 +50,17 @@ function listProfiles(): string[] {
 /**
  * Save current configuration as a profile
  */
-export function saveProfile(name: string): void {
+export function saveProfile(adapter: MCPAdapter, name: string): void {
   try {
     ensureProfilesDir();
 
-    const config = loadConfig();
+    const config = adapter.loadConfig();
 
     const profile: Profile = {
       name,
-      mcpServers: config.mcpServers || {},
-      _disabled_mcpServers: config._disabled_mcpServers,
+      tool: adapter.id,
+      enabled: config.enabled || {},
+      disabled: config.disabled || {},
       created: new Date().toISOString()
     };
 
@@ -63,7 +68,7 @@ export function saveProfile(name: string): void {
 
     fs.writeFileSync(profilePath, JSON.stringify(profile, null, 2));
 
-    console.log(success(`Saved profile "${name}"`));
+    console.log(success(`Saved profile "${name}" for ${adapter.name}`));
     console.log(chalk.dim(`Profile saved to: ${profilePath}`));
   } catch (err) {
     console.error(formatError(err instanceof Error ? err.message : String(err)));
@@ -74,7 +79,7 @@ export function saveProfile(name: string): void {
 /**
  * Load a profile and apply it to the current configuration
  */
-export function loadProfile(name: string): void {
+export function loadProfile(adapter: MCPAdapter, name: string): void {
   try {
     const profilePath = getProfilePath(name);
 
@@ -84,22 +89,23 @@ export function loadProfile(name: string): void {
       process.exit(1);
     }
 
-    const profileData = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
-    const config = loadConfig();
+    const profile: Profile = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
 
-    // Update config with profile data
-    config.mcpServers = profileData.mcpServers;
-    config._disabled_mcpServers = profileData._disabled_mcpServers;
-
-    // Clean up empty disabled section
-    if (config._disabled_mcpServers && Object.keys(config._disabled_mcpServers).length === 0) {
-      delete config._disabled_mcpServers;
+    // Warn if profile was created for a different tool
+    if (profile.tool && profile.tool !== adapter.id) {
+      console.log(chalk.yellow(`\nWarning: Profile "${name}" was created for ${profile.tool}, loading into ${adapter.id}`));
     }
 
-    saveConfig(config);
+    const config = adapter.loadConfig();
+
+    // Update config with profile data
+    config.enabled = profile.enabled || profile.mcpServers || {};  // Support old format
+    config.disabled = profile.disabled || profile._disabled_mcpServers || {};  // Support old format
+
+    adapter.saveConfig(config);
 
     console.log(success(`Loaded profile "${name}"`));
-    console.log('\nRestart Claude Code for changes to take effect.');
+    console.log(`\nRestart ${adapter.name} for changes to take effect.`);
   } catch (err) {
     console.error(formatError(err instanceof Error ? err.message : String(err)));
     process.exit(1);
@@ -126,13 +132,15 @@ export function listProfilesCommand(): void {
 
     profiles.forEach(name => {
       const profilePath = getProfilePath(name);
-      const profileData = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
+      const profile: Profile = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
 
-      const enabledCount = Object.keys(profileData.mcpServers || {}).length;
-      const disabledCount = Object.keys(profileData._disabled_mcpServers || {}).length;
-      const serverInfo = `${enabledCount} enabled, ${disabledCount} disabled`;
+      // Support both old and new profile formats
+      const enabledCount = Object.keys(profile.enabled || profile.mcpServers || {}).length;
+      const disabledCount = Object.keys(profile.disabled || profile._disabled_mcpServers || {}).length;
+      const toolTag = profile.tool ? `[${profile.tool}] ` : '';
+      const serverInfo = `${toolTag}${enabledCount} enabled, ${disabledCount} disabled`;
 
-      const created = new Date(profileData.created).toLocaleString();
+      const created = new Date(profile.created).toLocaleString();
 
       table.push([
         chalk.cyan(name),
@@ -175,39 +183,38 @@ export function deleteProfile(name: string): void {
 /**
  * Create pre-built profiles
  */
-export function createPrebuiltProfiles(): void {
+export function createPrebuiltProfiles(adapter: MCPAdapter): void {
   try {
-    const config = loadConfig();
+    const config = adapter.loadConfig();
 
     // Create minimal profile (only essential servers)
     const minimalServers = ['time', 'fetch', 'memory'];
-    const minimalConfig: Partial<ClaudeConfig> = {
-      mcpServers: {},
-      _disabled_mcpServers: {}
-    };
+    const minimalEnabled: Record<string, any> = {};
+    const minimalDisabled: Record<string, any> = {};
 
-    Object.entries(config.mcpServers || {}).forEach(([name, server]) => {
+    Object.entries(config.enabled || {}).forEach(([name, server]) => {
       const isEssential = minimalServers.some(essential =>
         name.toLowerCase().includes(essential)
       );
 
       if (isEssential) {
-        minimalConfig.mcpServers![name] = server;
+        minimalEnabled[name] = server;
       } else {
-        minimalConfig._disabled_mcpServers![name] = server;
+        minimalDisabled[name] = server;
       }
     });
 
-    // Add already disabled servers
-    Object.entries(config._disabled_mcpServers || {}).forEach(([name, server]) => {
-      minimalConfig._disabled_mcpServers![name] = server;
+    // Add already disabled servers to minimal disabled
+    Object.entries(config.disabled || {}).forEach(([name, server]) => {
+      minimalDisabled[name] = server;
     });
 
     // Save minimal profile
     const minimalProfile: Profile = {
       name: 'minimal',
-      mcpServers: minimalConfig.mcpServers!,
-      _disabled_mcpServers: minimalConfig._disabled_mcpServers,
+      tool: adapter.id,
+      enabled: minimalEnabled,
+      disabled: minimalDisabled,
       created: new Date().toISOString()
     };
 
@@ -220,11 +227,12 @@ export function createPrebuiltProfiles(): void {
     // Save full profile (all enabled)
     const fullProfile: Profile = {
       name: 'full',
-      mcpServers: {
-        ...config.mcpServers,
-        ...config._disabled_mcpServers
+      tool: adapter.id,
+      enabled: {
+        ...config.enabled,
+        ...config.disabled
       },
-      _disabled_mcpServers: {},
+      disabled: {},
       created: new Date().toISOString()
     };
 
@@ -233,7 +241,7 @@ export function createPrebuiltProfiles(): void {
       JSON.stringify(fullProfile, null, 2)
     );
 
-    console.log(success('Created pre-built profiles: "minimal" and "full"'));
+    console.log(success(`Created pre-built profiles for ${adapter.name}: "minimal" and "full"`));
   } catch (err) {
     console.error(formatError(err instanceof Error ? err.message : String(err)));
     process.exit(1);

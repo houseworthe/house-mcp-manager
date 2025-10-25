@@ -1,6 +1,6 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
-import { loadConfig, saveConfig, getAllServers, isServerEnabled, toggleServer as toggleServerConfig } from '../config.js';
+import type { MCPAdapter } from '../adapters/base.js';
 import { estimateServerTokens, calculateTotalTokens } from '../utils/tokens.js';
 import { success, error as formatError, header } from '../utils/formatting.js';
 
@@ -11,10 +11,10 @@ interface ServerChoice {
   disabled?: boolean;
 }
 
-export async function interactiveCommand(): Promise<void> {
+export async function interactiveCommand(adapter: MCPAdapter): Promise<void> {
   try {
-    const config = loadConfig();
-    const allServers = getAllServers(config);
+    const config = adapter.loadConfig();
+    const allServers = adapter.getAllServers(config);
 
     if (allServers.length === 0) {
       console.log(chalk.yellow('No MCP servers found in your configuration.'));
@@ -22,16 +22,16 @@ export async function interactiveCommand(): Promise<void> {
     }
 
     // Calculate current token usage
-    const currentTokens = calculateTotalTokens(config.mcpServers || {});
+    const currentTokens = calculateTotalTokens(config.enabled || {});
 
-    console.log(header('Interactive MCP Server Manager'));
+    console.log(header(`Interactive MCP Server Manager (${adapter.name})`));
     console.log(chalk.dim('\nSelect servers to ENABLE (checked = enabled, unchecked = disabled)'));
     console.log(chalk.dim(`Current token usage: ${chalk.bold(currentTokens.toLocaleString())} tokens\n`));
 
     // Create choices for inquirer
     const choices: ServerChoice[] = allServers.map(name => {
-      const enabled = isServerEnabled(config, name);
-      const server = enabled ? config.mcpServers[name] : config._disabled_mcpServers![name];
+      const enabled = adapter.isServerEnabled(config, name);
+      const server = enabled ? config.enabled[name] : config.disabled[name];
       const tokens = estimateServerTokens(name, server);
 
       const tokenInfo = tokens > 10000
@@ -63,7 +63,7 @@ export async function interactiveCommand(): Promise<void> {
     const toDisable: string[] = [];
 
     allServers.forEach(name => {
-      const currentlyEnabled = isServerEnabled(config, name);
+      const currentlyEnabled = adapter.isServerEnabled(config, name);
       const shouldBeEnabled = selectedServers.has(name);
 
       if (shouldBeEnabled && !currentlyEnabled) {
@@ -96,14 +96,14 @@ export async function interactiveCommand(): Promise<void> {
     let newConfig = { ...config };
 
     toDisable.forEach(name => {
-      newConfig = toggleServerConfig(newConfig, name);
+      newConfig = adapter.toggleServer(newConfig, name);
     });
 
     toEnable.forEach(name => {
-      newConfig = toggleServerConfig(newConfig, name);
+      newConfig = adapter.toggleServer(newConfig, name);
     });
 
-    const newTokens = calculateTotalTokens(newConfig.mcpServers || {});
+    const newTokens = calculateTotalTokens(newConfig.enabled || {});
     const tokenDiff = newTokens - currentTokens;
 
     console.log(chalk.bold('\nToken Impact:'));
@@ -134,10 +134,10 @@ export async function interactiveCommand(): Promise<void> {
     }
 
     // Apply changes
-    saveConfig(newConfig);
+    adapter.saveConfig(newConfig);
 
     console.log(success('\nChanges applied successfully!'));
-    console.log(chalk.dim('Restart Claude Code for changes to take effect.'));
+    console.log(chalk.dim(`Restart ${adapter.name} for changes to take effect.`));
 
     // Show final summary
     console.log(chalk.bold('\nFinal Configuration:'));

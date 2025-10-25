@@ -1,15 +1,15 @@
 import chalk from 'chalk';
-import { loadConfig, getEnabledServers, getDisabledServers } from '../config.js';
+import type { MCPAdapter } from '../adapters/base.js';
 import { header, error as formatError } from '../utils/formatting.js';
 
-export function listCommand(): void {
+export function listCommand(adapter: MCPAdapter): void {
   try {
-    const config = loadConfig();
+    const config = adapter.loadConfig();
 
-    const enabledServers = getEnabledServers(config);
-    const disabledServers = getDisabledServers(config);
+    const enabledServers = adapter.getEnabledServers(config);
+    const disabledServers = adapter.getDisabledServers(config);
 
-    console.log(header('MCP Server Status'));
+    console.log(header(`MCP Server Status (${adapter.name})`));
 
     // Show enabled servers
     if (enabledServers.length > 0) {

@@ -16,6 +16,9 @@ House MCP Manager is part of the **House suite** of tools for Claude Code:
 
 AI coding agents load ALL configured MCP servers on startup, consuming massive amounts of your context window before you even start coding. Some servers like Canvas can consume **78,000+ tokens** - that's nearly 40% of your 200K context budget!
 
+![MCP Server Status](demo.png)
+*Before: MCP servers consuming 127K tokens before you write a single line of code*
+
 Multiple highly-upvoted GitHub issues ([#6638](https://github.com/anthropics/claude-code/issues/6638), [#5722](https://github.com/anthropics/claude-code/issues/5722), [#7068](https://github.com/anthropics/claude-code/issues/7068), [#7936](https://github.com/anthropics/claude-code/issues/7936)) show the community wants better MCP management, but there's no official solution yet.
 
 ## The Solution

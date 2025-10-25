@@ -2,7 +2,7 @@
 
 **Universal MCP server management for AI coding agents**
 
-A powerful CLI tool to manage MCP servers across multiple AI coding tools (Claude Code, Cline, Continue) and optimize your token usage.
+A powerful CLI tool to manage MCP servers across multiple AI coding tools (Claude Code, Cursor, Cline, Continue) and optimize your token usage.
 
 ## The Problem
 

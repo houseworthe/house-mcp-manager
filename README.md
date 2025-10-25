@@ -1,4 +1,4 @@
-# MCP Manager
+# House MCP Manager
 
 **Universal MCP server management for AI coding agents**
 

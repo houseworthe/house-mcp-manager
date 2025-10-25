@@ -1,12 +1,20 @@
 {
-  "name": "claude-mcp-manager",
+  "name": "house-mcp-manager",
   "version": "1.0.0",
-  "description": "CLI tool to manage Claude Code MCP servers - disable, enable, and optimize token usage",
+  "description": "Universal MCP server manager for AI coding agents - part of the House suite of Claude Code tools",
   "main": "dist/cli.js",
   "type": "module",
   "bin": {
-    "mcp-manager": "./dist/cli.js"
+    "house-mcp-manager": "./dist/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/houseworthe/house-mcp-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/houseworthe/house-mcp-manager/issues"
+  },
+  "homepage": "https://github.com/houseworthe/house-mcp-manager#readme",
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
@@ -20,8 +28,12 @@
     "claude",
     "mcp",
     "claude-code",
+    "cursor",
+    "cline",
     "cli",
-    "token-optimization"
+    "token-optimization",
+    "house",
+    "house-suite"
   ],
   "author": "Ethan Houseworth",
   "license": "MIT",

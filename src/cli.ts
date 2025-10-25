@@ -20,7 +20,7 @@ import { detectCommand } from './commands/detect.js';
 const program = new Command();
 
 program
-  .name('mcp-manager')
+  .name('house-mcp-manager')
   .description(chalk.cyan('Universal MCP server manager for AI coding agents'))
   .version('1.0.0')
   .option('--tool <tool>', 'Specify which tool to manage (claude, cline, etc). Auto-detects if not specified.');

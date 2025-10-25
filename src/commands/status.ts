@@ -73,7 +73,7 @@ export function statusCommand(adapter: MCPAdapter): void {
     if (totalEnabledTokens > 100000) {
       console.log(chalk.yellow('\n⚠️  HIGH TOKEN USAGE DETECTED'));
       console.log(chalk.yellow('   Consider disabling servers you\'re not actively using.'));
-      console.log(chalk.dim('   Use "mcp-manager interactive" to quickly toggle servers.'));
+      console.log(chalk.dim('   Use "house-mcp-manager interactive" to quickly toggle servers.'));
     } else if (totalEnabledTokens > 50000) {
       console.log(chalk.yellow('\n⚠️  MODERATE TOKEN USAGE'));
       console.log(chalk.dim('   Your context window is being moderately consumed by MCP servers.'));

@@ -38,8 +38,8 @@ export function listCommand(adapter: MCPAdapter): void {
     console.log(chalk.bold(`\nTotal: ${total} servers (${enabledServers.length} enabled, ${disabledServers.length} disabled)`));
 
     // Hint
-    console.log(chalk.dim('\nUse "mcp-manager status" for detailed token estimates'));
-    console.log(chalk.dim('Use "mcp-manager interactive" for quick toggling'));
+    console.log(chalk.dim('\nUse "house-mcp-manager status" for detailed token estimates'));
+    console.log(chalk.dim('Use "house-mcp-manager interactive" for quick toggling'));
   } catch (err) {
     console.error(formatError(err instanceof Error ? err.message : String(err)));
     process.exit(1);

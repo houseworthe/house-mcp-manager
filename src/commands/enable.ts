@@ -14,7 +14,7 @@ export function enableCommand(adapter: MCPAdapter, serverName: string): void {
     // Check if server exists in disabled servers
     if (!config.disabled[serverName]) {
       console.log(formatError(`Server "${serverName}" is not disabled or does not exist`));
-      console.log('\nUse "mcp-manager list" to see available servers.');
+      console.log('\nUse "house-mcp-manager list" to see available servers.');
       process.exit(1);
     }
 

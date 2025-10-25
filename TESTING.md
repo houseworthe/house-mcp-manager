@@ -318,4 +318,4 @@ When adding new features:
 
 ## Questions?
 
-Open an issue on [GitHub](https://github.com/houseworthe/claude-mcp-manager) if you have questions about the test suite.
+Open an issue on [GitHub](https://github.com/houseworthe/house-mcp-manager) if you have questions about the test suite.

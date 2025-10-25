@@ -71,14 +71,14 @@ export class AdapterRegistry {
         throw new Error(
           `Unknown tool: "${id}"\n` +
           `Available tools: ${available}\n` +
-          `Use "mcp-manager detect" to see which tools are installed.`
+          `Use "house-mcp-manager detect" to see which tools are installed.`
         );
       }
 
       if (!adapter.detect()) {
         throw new Error(
           `${adapter.name} is not installed or not configured.\n` +
-          `Use "mcp-manager detect" to see which tools are installed.`
+          `Use "house-mcp-manager detect" to see which tools are installed.`
         );
       }
 

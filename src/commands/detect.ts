@@ -40,5 +40,5 @@ export function detectCommand(): void {
   }
 
   console.log(chalk.dim('\nUse --tool=<id> to specify which tool to manage'));
-  console.log(chalk.dim('Example: mcp-manager --tool=cline list'));
+  console.log(chalk.dim('Example: house-mcp-manager --tool=cline list'));
 }

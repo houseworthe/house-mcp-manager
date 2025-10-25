@@ -85,7 +85,7 @@ export function loadProfile(adapter: MCPAdapter, name: string): void {
 
     if (!fs.existsSync(profilePath)) {
       console.error(formatError(`Profile "${name}" does not exist`));
-      console.log('\nUse "mcp-manager profile list" to see available profiles.');
+      console.log('\nUse "house-mcp-manager profile list" to see available profiles.');
       process.exit(1);
     }
 
@@ -122,7 +122,7 @@ export function listProfilesCommand(): void {
     if (profiles.length === 0) {
       console.log(header('Saved Profiles'));
       console.log(chalk.gray('\nNo profiles saved yet.'));
-      console.log(chalk.dim('\nUse "mcp-manager profile save <name>" to save your current configuration.'));
+      console.log(chalk.dim('\nUse "house-mcp-manager profile save <name>" to save your current configuration.'));
       return;
     }
 
@@ -151,7 +151,7 @@ export function listProfilesCommand(): void {
 
     console.log(table.toString());
 
-    console.log(chalk.dim('\nUse "mcp-manager profile load <name>" to load a profile.'));
+    console.log(chalk.dim('\nUse "house-mcp-manager profile load <name>" to load a profile.'));
   } catch (err) {
     console.error(formatError(err instanceof Error ? err.message : String(err)));
     process.exit(1);
@@ -167,7 +167,7 @@ export function deleteProfile(name: string): void {
 
     if (!fs.existsSync(profilePath)) {
       console.error(formatError(`Profile "${name}" does not exist`));
-      console.log('\nUse "mcp-manager profile list" to see available profiles.');
+      console.log('\nUse "house-mcp-manager profile list" to see available profiles.');
       process.exit(1);
     }
 

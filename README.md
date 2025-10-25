@@ -4,6 +4,14 @@
 
 A powerful CLI tool to manage MCP servers across multiple AI coding tools (Claude Code, Cursor, Cline, Continue) and optimize your token usage.
 
+## Part of the House Suite
+
+House MCP Manager is part of the **House suite** of tools for Claude Code:
+
+- **[house-code](https://github.com/houseworthe/house-code)** - Claude Code clone with token reduction via sub-agent context cleaner
+- **[house-agents](https://github.com/houseworthe/house-agents)** - Sub-agent framework that isolates heavy operations (95%+ token savings)
+- **house-mcp-manager** (this tool) - Universal MCP server management
+
 ## The Problem
 
 AI coding agents load ALL configured MCP servers on startup, consuming massive amounts of your context window before you even start coding. Some servers like Canvas can consume **78,000+ tokens** - that's nearly 40% of your 200K context budget!
@@ -12,7 +20,7 @@ Multiple highly-upvoted GitHub issues ([#6638](https://github.com/anthropics/cla
 
 ## The Solution
 
-`mcp-manager` works with ANY MCP-enabled tool to let you quickly enable/disable servers, view token usage, save profiles, and optimize your context window - all without manually editing JSON files.
+`house-mcp-manager` works with ANY MCP-enabled tool to let you quickly enable/disable servers, view token usage, save profiles, and optimize your context window - all without manually editing JSON files.
 
 ## Supported Tools
 
@@ -37,20 +45,20 @@ The tool auto-detects which MCP-enabled tools you have installed and manages the
 
 ## Quick Setup with Claude Code
 
-Copy and paste this prompt into Claude Code to automatically install mcp-manager:
+Copy and paste this prompt into Claude Code to automatically install house-mcp-manager:
 
 ```
-Please help me install mcp-manager:
+Please help me install house-mcp-manager:
 
-1. Clone the repository from https://github.com/houseworthe/claude-mcp-manager
+1. Clone the repository from https://github.com/houseworthe/house-mcp-manager
 2. Navigate into the cloned directory
 3. Run npm install to install dependencies
 4. Run npm run build to compile the TypeScript
-5. Run npm link to make the mcp-manager command available globally
-6. Verify the installation by running: mcp-manager --help
-7. Show me my current MCP server status by running: mcp-manager status
+5. Run npm link to make the house-mcp-manager command available globally
+6. Verify the installation by running: house-mcp-manager --help
+7. Show me my current MCP server status by running: house-mcp-manager status
 
-After installation, explain what mcp-manager does and show me the key commands I can use.
+After installation, explain what house-mcp-manager does and show me the key commands I can use.
 ```
 
 ## Installation
@@ -58,20 +66,20 @@ After installation, explain what mcp-manager does and show me the key commands I
 ### Option 1: Clone & Link (Recommended)
 
 ```bash
-git clone https://github.com/houseworthe/claude-mcp-manager.git
-cd claude-mcp-manager
+git clone https://github.com/houseworthe/house-mcp-manager.git
+cd house-mcp-manager
 npm install
 npm run build
 npm link
 ```
 
-Now you can use `mcp-manager` from anywhere!
+Now you can use `house-mcp-manager` from anywhere!
 
 ### Option 2: Run from Source
 
 ```bash
-git clone https://github.com/houseworthe/claude-mcp-manager.git
-cd claude-mcp-manager
+git clone https://github.com/houseworthe/house-mcp-manager.git
+cd house-mcp-manager
 npm install
 npm run dev <command>
 ```
@@ -79,7 +87,7 @@ npm run dev <command>
 ### Future: npm Global Install (Coming Soon)
 
 ```bash
-npm install -g mcp-manager
+npm install -g house-mcp-manager
 ```
 
 ## Quick Start
@@ -88,41 +96,41 @@ npm install -g mcp-manager
 
 ```bash
 # See which MCP-enabled tools are installed
-mcp-manager detect
+house-mcp-manager detect
 ```
 
 ### View Your Current Setup
 
 ```bash
 # List all servers (auto-detects tool)
-mcp-manager list
+house-mcp-manager list
 
 # View detailed token estimates
-mcp-manager status
+house-mcp-manager status
 
 # Manage a specific tool
-mcp-manager --tool=cline list
-mcp-manager --tool=claude status
+house-mcp-manager --tool=cline list
+house-mcp-manager --tool=claude status
 ```
 
 ### Enable/Disable Servers
 
 ```bash
 # Disable a heavy server
-mcp-manager disable canvas-mcp-server
+house-mcp-manager disable canvas-mcp-server
 
 # Enable it back when needed
-mcp-manager enable canvas-mcp-server
+house-mcp-manager enable canvas-mcp-server
 ```
 
 ### Interactive Mode (Recommended)
 
 ```bash
 # Launch interactive checkbox interface
-mcp-manager interactive
+house-mcp-manager interactive
 
 # Or just:
-mcp-manager
+house-mcp-manager
 ```
 
 This shows all your servers with token estimates. Use ↑/↓ to navigate, Space to toggle, Enter to confirm.
@@ -131,80 +139,80 @@ This shows all your servers with token estimates. Use ↑/↓ to navigate, Space
 
 ```bash
 # Save current setup as "minimal"
-mcp-manager profile save minimal
+house-mcp-manager profile save minimal
 
 # Switch between configurations
-mcp-manager profile load minimal
-mcp-manager profile load full
+house-mcp-manager profile load minimal
+house-mcp-manager profile load full
 
 # Create pre-built profiles
-mcp-manager profile init
+house-mcp-manager profile init
 
 # View all saved profiles
-mcp-manager profile list
+house-mcp-manager profile list
 
 # Delete a profile
-mcp-manager profile delete old-config
+house-mcp-manager profile delete old-config
 ```
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `mcp-manager detect` | Detect installed MCP-enabled tools |
-| `mcp-manager list` | List all MCP servers (enabled/disabled) |
-| `mcp-manager status` | Show detailed status with token estimates |
-| `mcp-manager disable <server>` | Disable a specific server |
-| `mcp-manager enable <server>` | Enable a specific server |
-| `mcp-manager interactive` | Launch interactive checkbox mode |
-| `mcp-manager profile save <name>` | Save current config as a profile |
-| `mcp-manager profile load <name>` | Load a saved profile |
-| `mcp-manager profile list` | List all saved profiles |
-| `mcp-manager profile delete <name>` | Delete a profile |
-| `mcp-manager profile init` | Create pre-built profiles |
-| `mcp-manager config` | Show MCP config file path |
-| `mcp-manager --tool=<id> <command>` | Manage a specific tool |
-| `mcp-manager --help` | Show help |
+| `house-mcp-manager detect` | Detect installed MCP-enabled tools |
+| `house-mcp-manager list` | List all MCP servers (enabled/disabled) |
+| `house-mcp-manager status` | Show detailed status with token estimates |
+| `house-mcp-manager disable <server>` | Disable a specific server |
+| `house-mcp-manager enable <server>` | Enable a specific server |
+| `house-mcp-manager interactive` | Launch interactive checkbox mode |
+| `house-mcp-manager profile save <name>` | Save current config as a profile |
+| `house-mcp-manager profile load <name>` | Load a saved profile |
+| `house-mcp-manager profile list` | List all saved profiles |
+| `house-mcp-manager profile delete <name>` | Delete a profile |
+| `house-mcp-manager profile init` | Create pre-built profiles |
+| `house-mcp-manager config` | Show MCP config file path |
+| `house-mcp-manager --tool=<id> <command>` | Manage a specific tool |
+| `house-mcp-manager --help` | Show help |
 
 ## Multi-Tool Management
 
 ```bash
 # Auto-detect which tool to manage
-mcp-manager status
+house-mcp-manager status
 
 # Explicitly manage Claude Code
-mcp-manager --tool=claude status
+house-mcp-manager --tool=claude status
 
 # Manage Cursor IDE
-mcp-manager --tool=cursor list
+house-mcp-manager --tool=cursor list
 
 # Manage Cline (VS Code extension)
-mcp-manager --tool=cline list
+house-mcp-manager --tool=cline list
 
 # See which tools are detected
-mcp-manager detect
+house-mcp-manager detect
 ```
 
 ## Example Workflow
 
 ```bash
 # 1. Check current token usage
-mcp-manager status
+house-mcp-manager status
 # Output: Total Active Token Usage: ~127,000 tokens ⚠️
 
 # 2. Disable heavy servers you're not using
-mcp-manager interactive
+house-mcp-manager interactive
 # Uncheck canvas, notion, puppeteer
 
 # 3. Check new usage
-mcp-manager status
+house-mcp-manager status
 # Output: Total Active Token Usage: ~14,000 tokens ✓
 
 # 4. Save this minimal config
-mcp-manager profile save coding-only
+house-mcp-manager profile save coding-only
 
 # 5. Later, when you need all features
-mcp-manager profile load full
+house-mcp-manager profile load full
 ```
 
 ## Real-World Impact
@@ -229,7 +237,7 @@ Context Available: 186,000 tokens (93% of budget)
 
 ## How It Works
 
-`mcp-manager` uses an adapter pattern to support multiple MCP-enabled tools:
+`house-mcp-manager` uses an adapter pattern to support multiple MCP-enabled tools:
 
 - **Claude Code**: Manages `~/.claude.json` with an internal `_disabled_mcpServers` field
 - **Cursor**: Manages `~/.cursor/mcp.json` for active servers. Disabled servers are stored in a separate `~/.cursor/mcp-disabled.json` file to avoid polluting the native Cursor configuration. Backups are saved to `~/.claude-mcp-backups/cursor/`
@@ -284,7 +292,7 @@ This tool was built to solve a real problem in the MCP ecosystem. If you have:
 - New tool adapters (Continue, Zed, etc.)
 - UI improvements
 
-Please open an issue or PR on [GitHub](https://github.com/houseworthe/claude-mcp-manager)!
+Please open an issue or PR on [GitHub](https://github.com/houseworthe/house-mcp-manager)!
 
 ## License
 

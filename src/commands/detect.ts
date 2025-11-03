@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { AdapterRegistry } from '../adapters/registry.js';
 import { header } from '../utils/formatting.js';
+import { detectProjectRoot, getCurrentProjectPath } from '../utils/scope.js';
 
 export function detectCommand(): void {
   const allAdapters = AdapterRegistry.getAll();
@@ -22,6 +23,11 @@ export function detectCommand(): void {
   detectedAdapters.forEach(adapter => {
     console.log(`  ${chalk.green('●')} ${chalk.bold(adapter.name)} (${adapter.id})`);
     console.log(chalk.dim(`     Config: ${adapter.getConfigPath()}`));
+    
+    // Show project scope support
+    if (adapter.supportsProjectScope()) {
+      console.log(chalk.dim(`     Project scope: ${chalk.green('supported')}`));
+    }
   });
 
   if (detectedAdapters.length < allAdapters.length) {
@@ -32,6 +38,18 @@ export function detectCommand(): void {
     });
   }
 
+  // Show project config detection
+  const currentPath = getCurrentProjectPath();
+  const projectRoot = detectProjectRoot(currentPath);
+  console.log(chalk.bold('\n📍 PROJECT CONFIG:'));
+  if (projectRoot) {
+    console.log(chalk.green(`  Project config detected at: ${projectRoot}`));
+    console.log(chalk.dim(`  Current directory: ${currentPath}`));
+  } else {
+    console.log(chalk.gray(`  No project config detected in current directory or parents`));
+    console.log(chalk.dim(`  Current directory: ${currentPath}`));
+  }
+
   // Show auto-selected tool
   const autoSelected = AdapterRegistry.autoSelect();
   if (autoSelected) {
@@ -40,5 +58,6 @@ export function detectCommand(): void {
   }
 
   console.log(chalk.dim('\nUse --tool=<id> to specify which tool to manage'));
-  console.log(chalk.dim('Example: house-mcp-manager --tool=cline list'));
+  console.log(chalk.dim('Use --scope=<user|project|auto> to control configuration scope'));
+  console.log(chalk.dim('Example: house-mcp-manager --tool=claude --scope=project list'));
 }

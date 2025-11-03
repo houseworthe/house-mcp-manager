@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import chalk from 'chalk';
-import type { MCPAdapter, MCPConfig } from '../adapters/base.js';
+import type { MCPAdapter, MCPConfig, ScopedMCPConfig } from '../adapters/base.js';
+import type { ScopeInfo } from '../utils/scope.js';
 import { success, error as formatError, createProfileTable, header } from '../utils/formatting.js';
 
 const PROFILES_DIR = path.join(os.homedir(), '.claude-mcp-profiles');
@@ -12,6 +13,8 @@ interface Profile {
   tool?: string;  // Optional for backward compat
   enabled?: Record<string, any>;
   disabled?: Record<string, any>;
+  scope?: 'user' | 'project';
+  projectPath?: string;
   // Old format (backward compat)
   mcpServers?: Record<string, any>;
   _disabled_mcpServers?: Record<string, any>;
@@ -48,19 +51,40 @@ function listProfiles(): string[] {
 }
 
 /**
+ * Helper to load config based on scope
+ */
+function loadScopedConfig(adapter: MCPAdapter, scopeInfo: ScopeInfo): ScopedMCPConfig {
+  if (scopeInfo.scope === 'project' && adapter.supportsProjectScope() && adapter.getMergedConfig) {
+    return adapter.getMergedConfig(scopeInfo.projectPath!);
+  }
+  const config = adapter.loadConfig();
+  return {
+    ...config,
+    scope: 'user',
+    inheritance: {
+      inherited: Object.keys(config.enabled),
+      overridden: [],
+      additions: []
+    }
+  };
+}
+
+/**
  * Save current configuration as a profile
  */
-export function saveProfile(adapter: MCPAdapter, name: string): void {
+export function saveProfile(adapter: MCPAdapter, name: string, scopeInfo: ScopeInfo): void {
   try {
     ensureProfilesDir();
 
-    const config = adapter.loadConfig();
+    const config = loadScopedConfig(adapter, scopeInfo);
 
     const profile: Profile = {
       name,
       tool: adapter.id,
       enabled: config.enabled || {},
       disabled: config.disabled || {},
+      scope: config.scope || 'user',
+      projectPath: config.projectPath,
       created: new Date().toISOString()
     };
 
@@ -68,7 +92,8 @@ export function saveProfile(adapter: MCPAdapter, name: string): void {
 
     fs.writeFileSync(profilePath, JSON.stringify(profile, null, 2));
 
-    console.log(success(`Saved profile "${name}" for ${adapter.name}`));
+    const scopeLabel = config.scope === 'project' ? ' (project scope)' : '';
+    console.log(success(`Saved profile "${name}" for ${adapter.name}${scopeLabel}`));
     console.log(chalk.dim(`Profile saved to: ${profilePath}`));
   } catch (err) {
     console.error(formatError(err instanceof Error ? err.message : String(err)));
@@ -79,7 +104,7 @@ export function saveProfile(adapter: MCPAdapter, name: string): void {
 /**
  * Load a profile and apply it to the current configuration
  */
-export function loadProfile(adapter: MCPAdapter, name: string): void {
+export function loadProfile(adapter: MCPAdapter, name: string, scopeInfo: ScopeInfo): void {
   try {
     const profilePath = getProfilePath(name);
 
@@ -96,15 +121,45 @@ export function loadProfile(adapter: MCPAdapter, name: string): void {
       console.log(chalk.yellow(`\nWarning: Profile "${name}" was created for ${profile.tool}, loading into ${adapter.id}`));
     }
 
-    const config = adapter.loadConfig();
+    // Warn if profile scope doesn't match current scope
+    if (profile.scope && profile.scope !== scopeInfo.scope) {
+      console.log(chalk.yellow(`\nWarning: Profile "${name}" was saved with ${profile.scope} scope, loading into ${scopeInfo.scope} scope`));
+    }
 
-    // Update config with profile data
-    config.enabled = profile.enabled || profile.mcpServers || {};  // Support old format
-    config.disabled = profile.disabled || profile._disabled_mcpServers || {};  // Support old format
+    // Load config based on scope
+    if (scopeInfo.scope === 'project' && adapter.supportsProjectScope()) {
+      // Load project config or create new one
+      let projectConfig = adapter.loadProjectConfig?.(scopeInfo.projectPath!);
+      if (!projectConfig) {
+        projectConfig = {
+          enabled: {},
+          disabled: {},
+          metadata: {
+            tool: adapter.id,
+            scope: 'project'
+          }
+        };
+      }
 
-    adapter.saveConfig(config);
+      // Update project config with profile data
+      projectConfig.enabled = profile.enabled || profile.mcpServers || {};  // Support old format
+      projectConfig.disabled = profile.disabled || profile._disabled_mcpServers || {};  // Support old format
 
-    console.log(success(`Loaded profile "${name}"`));
+      adapter.saveProjectConfig?.(scopeInfo.projectPath!, projectConfig);
+      console.log(success(`Loaded profile "${name}" to project-level configuration`));
+      console.log(chalk.dim(`Project: ${scopeInfo.projectPath}`));
+    } else {
+      // Load user config
+      const config = adapter.loadConfig();
+
+      // Update config with profile data
+      config.enabled = profile.enabled || profile.mcpServers || {};  // Support old format
+      config.disabled = profile.disabled || profile._disabled_mcpServers || {};  // Support old format
+
+      adapter.saveConfig(config);
+      console.log(success(`Loaded profile "${name}"`));
+    }
+
     console.log(`\nRestart ${adapter.name} for changes to take effect.`);
   } catch (err) {
     console.error(formatError(err instanceof Error ? err.message : String(err)));

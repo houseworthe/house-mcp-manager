@@ -40,6 +40,7 @@ The tool auto-detects which MCP-enabled tools you have installed and manages the
 
 - **Universal** - Works with Claude Code, Cursor, Cline, and more
 - **Auto-Detection** - Automatically finds installed MCP tools
+- **Project-Level Configuration** - Manage MCP servers per-project with inheritance from user-level config
 - **Quick Enable/Disable** - Toggle servers on/off instantly
 - **Token Tracking** - See exactly how many tokens each server consumes
 - **Interactive Mode** - Beautiful checkbox interface for bulk management
@@ -176,6 +177,8 @@ house-mcp-manager profile delete old-config
 | `house-mcp-manager profile init` | Create pre-built profiles |
 | `house-mcp-manager config` | Show MCP config file path |
 | `house-mcp-manager --tool=<id> <command>` | Manage a specific tool |
+| `house-mcp-manager --scope=<user\|project\|auto> <command>` | Control configuration scope (default: auto) |
+| `house-mcp-manager --project-path=<path> <command>` | Specify project path for project-level config |
 | `house-mcp-manager --help` | Show help |
 
 ## Multi-Tool Management
@@ -195,6 +198,84 @@ house-mcp-manager --tool=cline list
 
 # See which tools are detected
 house-mcp-manager detect
+```
+
+## Project-Level Configuration
+
+House MCP Manager supports managing MCP servers at two levels:
+
+- **User-level** (global): Applies to all projects by default
+- **Project-level**: Override user settings for specific projects
+
+### Scope Management
+
+```bash
+# Auto-detect (default): Use project config if detected, otherwise user-level
+house-mcp-manager list
+
+# Explicit user-level
+house-mcp-manager list --scope=user
+
+# Explicit project-level
+house-mcp-manager list --scope=project
+
+# Specific project path
+house-mcp-manager --project-path=/path/to/project list --scope=project
+```
+
+### Inheritance Behavior
+
+When using project scope, servers are categorized as:
+
+- **Inherited**: Servers from user-level config (automatically available)
+- **Overridden**: Project-specific version of a user server (configuration differs)
+- **Additions**: Servers only enabled for this project
+- **Disabled**: Servers disabled only for this project (inherited servers can be disabled)
+
+### Example: Project-Level Workflow
+
+```bash
+# 1. Check current status (shows merged view with inheritance)
+cd /path/to/my-project
+house-mcp-manager status --scope=project
+
+# Output shows:
+# Inherited from User:
+#   github         ~15k tokens    12 tools
+# Project Additions:
+#   puppeteer      ~8k tokens     7 tools
+
+# 2. Disable a heavy inherited server for this project only
+house-mcp-manager disable canvas-mcp-server --scope=project
+
+# 3. Enable a project-specific server
+house-mcp-manager enable puppeteer --scope=project
+
+# 4. View project-level config
+house-mcp-manager list --scope=project
+```
+
+### Project-Level Features
+
+- **Smart Auto-Detection**: Automatically uses project config if detected, falls back to user-level
+- **No-Op Protection**: Attempting to enable an already-inherited server shows an informative message
+- **Token Breakdown**: See token usage by inheritance category (inherited vs. project additions)
+- **Grouped Display**: Visual distinction between inherited and project-level servers
+
+### Project Config Storage
+
+For Claude Code, project configurations are stored in `~/.claude.json` under a `projects` section:
+
+```json
+{
+  "mcpServers": { /* user-level servers */ },
+  "projects": {
+    "/path/to/project": {
+      "mcpServers": { /* project-specific servers */ },
+      "disabledMcpServers": ["canvas"]  /* disabled by name */
+    }
+  }
+}
 ```
 
 ## Example Workflow

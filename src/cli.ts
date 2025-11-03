@@ -16,6 +16,7 @@ import {
 } from './commands/profile.js';
 import { interactiveCommand } from './commands/interactive.js';
 import { detectCommand } from './commands/detect.js';
+import { resolveScopeInfo, type ScopeInfo } from './utils/scope.js';
 
 const program = new Command();
 
@@ -23,7 +24,32 @@ program
   .name('house-mcp-manager')
   .description(chalk.cyan('Universal MCP server manager for AI coding agents'))
   .version('1.0.0')
-  .option('--tool <tool>', 'Specify which tool to manage (claude, cline, etc). Auto-detects if not specified.');
+  .option('--tool <tool>', 'Specify which tool to manage (claude, cline, etc). Auto-detects if not specified.')
+  .option('--scope <scope>', 'Scope for configuration: user, project, or auto (default: auto)', 'auto')
+  .option('--project-path <path>', 'Project path for project-level config (default: current directory)');
+
+// Helper to get scope info and adapter
+function getAdapterAndScope(): { adapter: any; scopeInfo: ScopeInfo } {
+  const opts = program.opts();
+  const adapter = AdapterRegistry.getAdapter(opts.tool);
+  
+  // Validate scope support
+  try {
+    const scopeInfo = resolveScopeInfo(opts.scope, opts.projectPath);
+    
+    if (scopeInfo.scope === 'project' && !adapter.supportsProjectScope()) {
+      throw new Error(
+        `${adapter.name} does not support project-level configuration.\n` +
+        `Use --scope=user to manage user-level configuration instead.`
+      );
+    }
+    
+    return { adapter, scopeInfo };
+  } catch (error) {
+    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
+    process.exit(1);
+  }
+}
 
 // Detect command
 program
@@ -37,18 +63,18 @@ program
 program
   .command('disable <server>')
   .description('Disable an MCP server')
-  .action((server: string, options: any) => {
-    const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-    disableCommand(adapter, server);
+  .action((server: string) => {
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    disableCommand(adapter, server, scopeInfo);
   });
 
 // Enable command
 program
   .command('enable <server>')
   .description('Enable an MCP server')
-  .action((server: string, options: any) => {
-    const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-    enableCommand(adapter, server);
+  .action((server: string) => {
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    enableCommand(adapter, server, scopeInfo);
   });
 
 // List command
@@ -57,8 +83,8 @@ program
   .alias('ls')
   .description('List all MCP servers')
   .action(() => {
-    const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-    listCommand(adapter);
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    listCommand(adapter, scopeInfo);
   });
 
 // Status command
@@ -66,8 +92,8 @@ program
   .command('status')
   .description('Show detailed server status with token estimates')
   .action(() => {
-    const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-    statusCommand(adapter);
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    statusCommand(adapter, scopeInfo);
   });
 
 // Profile commands
@@ -79,16 +105,16 @@ profileCmd
   .command('save <name>')
   .description('Save current configuration as a profile')
   .action((name: string) => {
-    const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-    saveProfile(adapter, name);
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    saveProfile(adapter, name, scopeInfo);
   });
 
 profileCmd
   .command('load <name>')
   .description('Load a saved profile')
   .action((name: string) => {
-    const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-    loadProfile(adapter, name);
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    loadProfile(adapter, name, scopeInfo);
   });
 
 profileCmd
@@ -121,8 +147,8 @@ program
   .alias('i')
   .description('Interactive mode - toggle servers with checkboxes')
   .action(async () => {
-    const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-    await interactiveCommand(adapter);
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    await interactiveCommand(adapter, scopeInfo);
   });
 
 // Config command (show config path)
@@ -138,11 +164,16 @@ program
 // Default action when no command is provided
 program.action(() => {
   // If no command, run interactive mode
-  const adapter = AdapterRegistry.getAdapter(program.opts().tool);
-  interactiveCommand(adapter).catch(err => {
-    console.error(chalk.red('Error running interactive mode:'), err);
+  try {
+    const { adapter, scopeInfo } = getAdapterAndScope();
+    interactiveCommand(adapter, scopeInfo).catch(err => {
+      console.error(chalk.red('Error running interactive mode:'), err);
+      process.exit(1);
+    });
+  } catch (err) {
+    console.error(chalk.red('Error:'), err);
     process.exit(1);
-  });
+  }
 });
 
 // Parse arguments

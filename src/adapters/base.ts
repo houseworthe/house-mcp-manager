@@ -21,6 +21,27 @@ export interface MCPConfig {
   };
 }
 
+/**
+ * Inheritance tracking for scoped configurations
+ */
+export interface ServerInheritance {
+  /** Servers inherited from user-level config */
+  inherited: string[];
+  /** Servers overridden at project level (exist in both user and project) */
+  overridden: string[];
+  /** Servers added only at project level */
+  additions: string[];
+}
+
+/**
+ * Scoped MCP configuration with inheritance tracking
+ */
+export interface ScopedMCPConfig extends MCPConfig {
+  inheritance?: ServerInheritance;
+  scope?: 'user' | 'project';
+  projectPath?: string;
+}
+
 export interface MCPAdapter {
   /** Name of the tool (e.g., "Claude Code", "Cline", "Continue") */
   readonly name: string;
@@ -66,6 +87,18 @@ export interface MCPAdapter {
 
   /** Toggle a server between enabled/disabled */
   toggleServer(config: MCPConfig, serverName: string): MCPConfig;
+
+  /** Check if this adapter supports project-level configuration */
+  supportsProjectScope(): boolean;
+
+  /** Load project-level configuration (if supported) */
+  loadProjectConfig?(projectPath: string): MCPConfig | null;
+
+  /** Save project-level configuration (if supported) */
+  saveProjectConfig?(projectPath: string, config: MCPConfig): void;
+
+  /** Get merged configuration (user + project) with inheritance tracking */
+  getMergedConfig?(projectPath: string): ScopedMCPConfig;
 }
 
 /**
@@ -133,5 +166,9 @@ export abstract class BaseAdapter implements MCPAdapter {
     } else {
       throw new Error(`Server "${serverName}" does not exist`);
     }
+  }
+
+  supportsProjectScope(): boolean {
+    return false;
   }
 }

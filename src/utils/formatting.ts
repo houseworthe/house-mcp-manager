@@ -99,3 +99,31 @@ export function header(text: string): string {
 export function subheader(text: string): string {
   return chalk.bold(`\n${text}`);
 }
+
+/**
+ * Formats a scope badge (USER SCOPE / PROJECT SCOPE)
+ */
+export function formatScopeBadge(scope: 'user' | 'project'): string {
+  if (scope === 'project') {
+    return chalk.bgBlue.white.bold(' PROJECT SCOPE ');
+  }
+  return chalk.bgGray.white.bold(' USER SCOPE ');
+}
+
+/**
+ * Formats a section header for grouped display
+ */
+export function sectionHeader(text: string): string {
+  return chalk.bold.cyan(`\n${text}:`);
+}
+
+/**
+ * Formats a compact token count (e.g., "~15k tokens")
+ */
+export function formatCompactTokens(tokens: number): string {
+  if (tokens >= 1000) {
+    const k = (tokens / 1000).toFixed(1);
+    return `~${k.replace(/\.0$/, '')}k tokens`;
+  }
+  return `~${tokens} tokens`;
+}

@@ -1,4 +1,5 @@
 import type { MCPServer } from '../config.js';
+import type { ScopedMCPConfig } from '../adapters/base.js';
 
 /**
  * Known token estimates for common MCP servers
@@ -137,4 +138,52 @@ export function calculateSavings(
   const percentage = currentTotal > 0 ? (serverTokens / currentTotal) * 100 : 0;
 
   return { tokens, percentage };
+}
+
+/**
+ * Calculates token usage by inheritance category for scoped configs
+ */
+export function calculateScopedTokens(config: ScopedMCPConfig): {
+  inherited: number;
+  overrides: number;
+  additions: number;
+  total: number;
+} {
+  const inheritance = config.inheritance || {
+    inherited: [],
+    overridden: [],
+    additions: []
+  };
+
+  let inherited = 0;
+  let overrides = 0;
+  let additions = 0;
+
+  // Calculate tokens for inherited servers
+  for (const name of inheritance.inherited) {
+    if (config.enabled[name]) {
+      inherited += estimateServerTokens(name, config.enabled[name]);
+    }
+  }
+
+  // Calculate tokens for overridden servers
+  for (const name of inheritance.overridden) {
+    if (config.enabled[name]) {
+      overrides += estimateServerTokens(name, config.enabled[name]);
+    }
+  }
+
+  // Calculate tokens for added servers
+  for (const name of inheritance.additions) {
+    if (config.enabled[name]) {
+      additions += estimateServerTokens(name, config.enabled[name]);
+    }
+  }
+
+  return {
+    inherited,
+    overrides,
+    additions,
+    total: inherited + overrides + additions
+  };
 }

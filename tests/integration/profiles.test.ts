@@ -5,6 +5,13 @@ import os from 'os';
 import { setupTestEnv, type TestEnv, createTestConfigFile, mockServer } from '../helpers/test-utils.js';
 import { TestAdapter, mockConsole, mockProcessExit, type ConsoleMock, type ProcessExitMock } from '../helpers/integration-utils.js';
 import type { MCPConfig } from '../../src/adapters/base.js';
+import type { ScopeInfo } from '../../src/utils/scope.js';
+
+// Helper to create user scope info for tests
+const userScopeInfo: ScopeInfo = {
+  scope: 'user',
+  isAutoDetected: false
+};
 
 // Profile module functions - will be dynamically imported
 let saveProfile: any;
@@ -63,7 +70,7 @@ describe('Profiles Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      saveProfile(adapter, 'my-profile');
+      saveProfile(adapter, 'my-profile', userScopeInfo);
 
       // Verify success message
       const output = consoleMock.getOutput().join('\n');
@@ -94,7 +101,7 @@ describe('Profiles Integration', () => {
       createTestConfigFile(env.tempDir, initialConfig);
 
       // Save first version
-      saveProfile(adapter, 'my-profile');
+      saveProfile(adapter, 'my-profile', userScopeInfo);
 
       // Update config
       const updatedConfig: MCPConfig = {
@@ -108,7 +115,7 @@ describe('Profiles Integration', () => {
       createTestConfigFile(env.tempDir, updatedConfig);
 
       // Save again with same name
-      saveProfile(adapter, 'my-profile');
+      saveProfile(adapter, 'my-profile', userScopeInfo);
 
       // Verify profile was overwritten
       const profilePath = path.join(profilesDir, 'my-profile.json');
@@ -120,7 +127,7 @@ describe('Profiles Integration', () => {
     it('should handle config load failure', () => {
       // Don't create config file
 
-      saveProfile(adapter, 'my-profile');
+      saveProfile(adapter, 'my-profile', userScopeInfo);
 
       const errorOutput = consoleMock.getErrorOutput().join('\n');
       expect(errorOutput).toContain('Config not found');
@@ -142,7 +149,7 @@ describe('Profiles Integration', () => {
         metadata: { tool: 'test' }
       };
       createTestConfigFile(env.tempDir, originalConfig);
-      saveProfile(adapter, 'test-profile');
+      saveProfile(adapter, 'test-profile', userScopeInfo);
 
       // Create a different current config
       const currentConfig: MCPConfig = {
@@ -155,7 +162,7 @@ describe('Profiles Integration', () => {
       createTestConfigFile(env.tempDir, currentConfig);
 
       // Load the profile
-      loadProfile(adapter, 'test-profile');
+      loadProfile(adapter, 'test-profile', userScopeInfo);
 
       // Verify success message
       const output = consoleMock.getOutput().join('\n');
@@ -176,12 +183,12 @@ describe('Profiles Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      loadProfile(adapter, 'nonexistent');
+      loadProfile(adapter, 'nonexistent', userScopeInfo);
 
       const errorOutput = consoleMock.getErrorOutput().join('\n');
       const output = consoleMock.getOutput().join('\n');
       expect(errorOutput).toContain('Profile "nonexistent" does not exist');
-      expect(output).toContain('Use "mcp-manager profile list" to see available profiles');
+      expect(output).toContain('Use "house-mcp-manager profile list" to see available profiles');
       expect(exitMock.getExitCode()).toBe(1);
     });
 
@@ -209,11 +216,14 @@ describe('Profiles Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      loadProfile(adapter, 'other-tool-profile');
+      loadProfile(adapter, 'other-tool-profile', userScopeInfo);
 
+      // Warning goes to stdout (console.log)
       const output = consoleMock.getOutput().join('\n');
-      expect(output).toContain('Warning: Profile "other-tool-profile" was created for claude');
-      expect(output).toContain('loading into test');
+      const errorOutput = consoleMock.getErrorOutput().join('\n');
+      const allOutput = output + errorOutput;
+      expect(allOutput).toContain('Warning: Profile "other-tool-profile" was created for claude');
+      expect(allOutput).toContain('loading into test');
     });
 
     it('should handle backward compatibility with old profile format', () => {
@@ -241,7 +251,7 @@ describe('Profiles Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      loadProfile(adapter, 'old-format-profile');
+      loadProfile(adapter, 'old-format-profile', userScopeInfo);
 
       // Verify it loaded correctly
       const updatedConfig = adapter.loadConfig();
@@ -265,7 +275,7 @@ describe('Profiles Integration', () => {
       createTestConfigFile(env.tempDir, config);
 
       // Save multiple profiles
-      saveProfile(adapter, 'profile1');
+      saveProfile(adapter, 'profile1', userScopeInfo);
 
       const config2: MCPConfig = {
         enabled: {
@@ -275,7 +285,7 @@ describe('Profiles Integration', () => {
         metadata: { tool: 'test' }
       };
       createTestConfigFile(env.tempDir, config2);
-      saveProfile(adapter, 'profile2');
+      saveProfile(adapter, 'profile2', userScopeInfo);
 
       listProfilesCommand();
 
@@ -284,7 +294,7 @@ describe('Profiles Integration', () => {
       expect(output).toContain('profile1');
       expect(output).toContain('profile2');
       expect(output).toContain('[test]'); // Tool tag
-      expect(output).toContain('Use "mcp-manager profile load <name>" to load a profile');
+      expect(output).toContain('Use "house-mcp-manager profile load <name>" to load a profile');
     });
 
     it('should show server counts in profile list', () => {
@@ -299,7 +309,7 @@ describe('Profiles Integration', () => {
         metadata: { tool: 'test' }
       };
       createTestConfigFile(env.tempDir, config);
-      saveProfile(adapter, 'test-profile');
+      saveProfile(adapter, 'test-profile', userScopeInfo);
 
       listProfilesCommand();
 
@@ -313,7 +323,7 @@ describe('Profiles Integration', () => {
       const output = consoleMock.getOutput().join('\n');
       expect(output).toContain('Saved Profiles');
       expect(output).toContain('No profiles saved yet');
-      expect(output).toContain('Use "mcp-manager profile save <name>" to save your current configuration');
+      expect(output).toContain('Use "house-mcp-manager profile save <name>" to save your current configuration');
     });
 
     it('should support old profile format in list', () => {
@@ -353,7 +363,7 @@ describe('Profiles Integration', () => {
         metadata: { tool: 'test' }
       };
       createTestConfigFile(env.tempDir, config);
-      saveProfile(adapter, 'to-delete');
+      saveProfile(adapter, 'to-delete', userScopeInfo);
 
       const profilePath = path.join(profilesDir, 'to-delete.json');
       expect(fs.existsSync(profilePath)).toBe(true);
@@ -373,7 +383,7 @@ describe('Profiles Integration', () => {
       const errorOutput = consoleMock.getErrorOutput().join('\n');
       const output = consoleMock.getOutput().join('\n');
       expect(errorOutput).toContain('Profile "nonexistent" does not exist');
-      expect(output).toContain('Use "mcp-manager profile list" to see available profiles');
+      expect(output).toContain('Use "house-mcp-manager profile list" to see available profiles');
       expect(exitMock.getExitCode()).toBe(1);
     });
   });
@@ -472,7 +482,7 @@ describe('Profiles Integration', () => {
       createTestConfigFile(env.tempDir, originalConfig);
 
       // Save profile
-      saveProfile(adapter, 'round-trip-test');
+      saveProfile(adapter, 'round-trip-test', userScopeInfo);
 
       // Change current config
       const differentConfig: MCPConfig = {
@@ -483,7 +493,7 @@ describe('Profiles Integration', () => {
       createTestConfigFile(env.tempDir, differentConfig);
 
       // Load profile back
-      loadProfile(adapter, 'round-trip-test');
+      loadProfile(adapter, 'round-trip-test', userScopeInfo);
 
       // Verify everything is preserved
       const restoredConfig = adapter.loadConfig();

@@ -6,6 +6,13 @@ import { enableCommand } from '../../src/commands/enable.js';
 import { listCommand } from '../../src/commands/list.js';
 import { statusCommand } from '../../src/commands/status.js';
 import type { MCPConfig } from '../../src/adapters/base.js';
+import type { ScopeInfo } from '../../src/utils/scope.js';
+
+// Helper to create user scope info for tests
+const userScopeInfo: ScopeInfo = {
+  scope: 'user',
+  isAutoDetected: false
+};
 
 describe('Commands Integration', () => {
   let env: TestEnv;
@@ -39,7 +46,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      disableCommand(adapter, 'github');
+      disableCommand(adapter, 'github', userScopeInfo);
 
       // Verify success message
       const output = consoleMock.getOutput().join('\n');
@@ -63,7 +70,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      disableCommand(adapter, 'github');
+      disableCommand(adapter, 'github', userScopeInfo);
 
       // Verify backup was created
       const fs = require('fs');
@@ -84,12 +91,13 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      disableCommand(adapter, 'notion');
+      disableCommand(adapter, 'notion', userScopeInfo);
 
-      // Verify error message
+      // Verify error message (errors go to stderr)
+      const errorOutput = consoleMock.getErrorOutput().join('\n');
+      expect(errorOutput).toContain('Server "notion" is not enabled or does not exist');
       const output = consoleMock.getOutput().join('\n');
-      expect(output).toContain('Server "notion" is not enabled or does not exist');
-      expect(output).toContain('Use "mcp-manager list" to see available servers');
+      expect(output).toContain('Use "house-mcp-manager list" to see available servers');
 
       // Verify process.exit(1) was called
       expect(exitMock.getExitCode()).toBe(1);
@@ -105,17 +113,17 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      disableCommand(adapter, 'nonexistent');
+      disableCommand(adapter, 'nonexistent', userScopeInfo);
 
-      const output = consoleMock.getOutput().join('\n');
-      expect(output).toContain('Server "nonexistent" is not enabled or does not exist');
+      const errorOutput = consoleMock.getErrorOutput().join('\n');
+      expect(errorOutput).toContain('Server "nonexistent" is not enabled or does not exist');
       expect(exitMock.getExitCode()).toBe(1);
     });
 
     it('should handle config load failure gracefully', () => {
       // Don't create config file - adapter.loadConfig() will fail
 
-      disableCommand(adapter, 'github');
+      disableCommand(adapter, 'github', userScopeInfo);
 
       const errorOutput = consoleMock.getErrorOutput().join('\n');
       expect(errorOutput).toContain('Config not found');
@@ -137,7 +145,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      enableCommand(adapter, 'notion');
+      enableCommand(adapter, 'notion', userScopeInfo);
 
       // Verify success message
       const output = consoleMock.getOutput().join('\n');
@@ -161,7 +169,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      enableCommand(adapter, 'github');
+      enableCommand(adapter, 'github', userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       expect(output).toContain('Server "github" is already enabled');
@@ -178,11 +186,12 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      enableCommand(adapter, 'nonexistent');
+      enableCommand(adapter, 'nonexistent', userScopeInfo);
 
+      const errorOutput = consoleMock.getErrorOutput().join('\n');
+      expect(errorOutput).toContain('Server "nonexistent" is not disabled or does not exist');
       const output = consoleMock.getOutput().join('\n');
-      expect(output).toContain('Server "nonexistent" is not disabled or does not exist');
-      expect(output).toContain('Use "mcp-manager list" to see available servers');
+      expect(output).toContain('Use "house-mcp-manager list" to see available servers');
       expect(exitMock.getExitCode()).toBe(1);
     });
 
@@ -196,7 +205,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, initialConfig);
 
-      enableCommand(adapter, 'notion');
+      enableCommand(adapter, 'notion', userScopeInfo);
 
       // Verify backup was created
       const fs = require('fs');
@@ -219,12 +228,12 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      listCommand(adapter);
+      listCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
 
-      // Check for header
-      expect(output).toContain('MCP Server Status (Test Tool)');
+      // Check for header (now includes scope badge)
+      expect(output).toContain('MCP Server Status (Test Tool');
 
       // Check for enabled servers section
       expect(output).toContain('ENABLED SERVERS');
@@ -239,8 +248,8 @@ describe('Commands Integration', () => {
       expect(output).toContain('Total: 3 servers (2 enabled, 1 disabled)');
 
       // Check for hints
-      expect(output).toContain('Use "mcp-manager status" for detailed token estimates');
-      expect(output).toContain('Use "mcp-manager interactive" for quick toggling');
+      expect(output).toContain('Use "house-mcp-manager status" for detailed token estimates');
+      expect(output).toContain('Use "house-mcp-manager interactive" for quick toggling');
     });
 
     it('should handle empty enabled servers', () => {
@@ -253,7 +262,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      listCommand(adapter);
+      listCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       expect(output).toContain('ENABLED SERVERS');
@@ -271,7 +280,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      listCommand(adapter);
+      listCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       expect(output).toContain('DISABLED SERVERS');
@@ -287,7 +296,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      listCommand(adapter);
+      listCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       expect(output).toContain('ENABLED SERVERS');
@@ -298,7 +307,7 @@ describe('Commands Integration', () => {
     it('should handle config load failure', () => {
       // Don't create config file
 
-      listCommand(adapter);
+      listCommand(adapter, userScopeInfo);
 
       const errorOutput = consoleMock.getErrorOutput().join('\n');
       expect(errorOutput).toContain('Config not found');
@@ -320,12 +329,12 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      statusCommand(adapter);
+      statusCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
 
-      // Check header
-      expect(output).toContain('MCP Server Status & Token Estimates (Test Tool)');
+      // Check header (now includes scope badge)
+      expect(output).toContain('MCP Server Status & Token Estimates (Test Tool');
 
       // Check enabled servers with status
       expect(output).toContain('ENABLED SERVERS');
@@ -365,7 +374,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      statusCommand(adapter);
+      statusCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       // Should show high or moderate token usage warning
@@ -384,7 +393,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      statusCommand(adapter);
+      statusCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       // Should have some token usage message
@@ -401,7 +410,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      statusCommand(adapter);
+      statusCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       expect(output).toContain('ENABLED SERVERS');
@@ -417,7 +426,7 @@ describe('Commands Integration', () => {
       };
       createTestConfigFile(env.tempDir, config);
 
-      statusCommand(adapter);
+      statusCommand(adapter, userScopeInfo);
 
       const output = consoleMock.getOutput().join('\n');
       expect(output).toContain('SUMMARY:');
@@ -429,7 +438,7 @@ describe('Commands Integration', () => {
     it('should handle config load failure', () => {
       // Don't create config file
 
-      statusCommand(adapter);
+      statusCommand(adapter, userScopeInfo);
 
       const errorOutput = consoleMock.getErrorOutput().join('\n');
       expect(errorOutput).toContain('Config not found');
@@ -449,14 +458,14 @@ describe('Commands Integration', () => {
       createTestConfigFile(env.tempDir, initialConfig);
 
       // Disable the server
-      disableCommand(adapter, 'github');
+      disableCommand(adapter, 'github', userScopeInfo);
 
       let config = adapter.loadConfig();
       expect(config.disabled).toHaveProperty('github');
       expect(config.disabled.github.args).toEqual(['--token', 'xyz']); // Verify args preserved
 
       // Re-enable the server
-      enableCommand(adapter, 'github');
+      enableCommand(adapter, 'github', userScopeInfo);
 
       config = adapter.loadConfig();
       expect(config.enabled).toHaveProperty('github');
